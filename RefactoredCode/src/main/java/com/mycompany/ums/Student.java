@@ -1,54 +1,86 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.mycompany.ums;
 
-// Student class for registration
-
 import java.util.List;
+import java.util.Objects;
 import java.util.Scanner;
 
-class Student {
-    private String id;
-    private String name;
-    private String email;
-    private String phone;
-    
+/**
+ * Student data class with only data properties.
+ * SRP: only responsible for student data.
+ */
+public final class Student {
+    private final String id;
+    private final String name;
+    private final String email;
+    private final String phone;
+
     public Student(String id, String name, String email, String phone) {
-        this.id = id;
-        this.name = name;
-        this.email = email;
-        this.phone = phone;
+        this.id = Objects.requireNonNull(id, "ID cannot be null");
+        this.name = Objects.requireNonNull(name, "Name cannot be null");
+        this.email = Objects.requireNonNull(email, "Email cannot be null");
+        this.phone = Objects.requireNonNull(phone, "Phone cannot be null");
     }
-    
+
     public String getId() { return id; }
     public String getName() { return name; }
     public String getEmail() { return email; }
     public String getPhone() { return phone; }
-    
-    public static void registerStudent(List<Student> students, Scanner scanner) {
-        System.out.println("\nStudent Registration");
-        
+}
+
+/**
+ * Interface for Student registration logic.
+ * ISP: Separate registration logic from Student data.
+ */
+interface StudentRegistration {
+    Student register(List<Student> students, Scanner scanner);
+}
+
+/**
+ * Interface for dues verification.
+ */
+interface DuesVerification {
+    boolean areDuesCleared(Student student);
+}
+
+/**
+ * Concrete implementation for registering students via console input.
+ * OCP: can extend or replace without modifying Student class.
+ */
+class ConsoleStudentRegistration implements StudentRegistration {
+    @Override
+    public Student register(List<Student> students, Scanner scanner) {
         System.out.print("Enter Student ID: ");
-        String id = scanner.nextLine();
-        
-        System.out.print("Enter Full Name: ");
-        String name = scanner.nextLine();
-        
+        String id = scanner.nextLine().trim();
+
+        // Check duplicate ID
+        if (students.stream().anyMatch(s -> s.getId().equalsIgnoreCase(id))) {
+            System.out.println("Student ID already exists.");
+            return null;
+        }
+
+        System.out.print("Enter Student Name: ");
+        String name = scanner.nextLine().trim();
+
         System.out.print("Enter Email: ");
-        String email = scanner.nextLine();
-        
-        System.out.print("Enter Phone Number: ");
-        String phone = scanner.nextLine();
-        
+        String email = scanner.nextLine().trim();
+
+        System.out.print("Enter Phone: ");
+        String phone = scanner.nextLine().trim();
+
         Student newStudent = new Student(id, name, email, phone);
         students.add(newStudent);
-        
-        System.out.println("Student registered successfully!");
+        System.out.println("Student registered successfully: " + name);
+        return newStudent;
     }
+}
 
-    boolean areDuesCleared() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+/**
+ * Concrete implementation of dues verification.
+ */
+class SimpleDuesVerification implements DuesVerification {
+    @Override
+    public boolean areDuesCleared(Student student) {
+        // TODO: Implement actual dues check, here returns true by default
+        return true;
     }
 }

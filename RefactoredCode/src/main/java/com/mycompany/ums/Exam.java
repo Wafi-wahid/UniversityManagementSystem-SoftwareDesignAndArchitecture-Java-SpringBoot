@@ -1,30 +1,38 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.mycompany.ums;
 
-// Exam class
-
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-class Exam {
-    public static void viewExams(String studentId, Map<String, List<String>> enrolledCourses,
-                                Map<String, List<String>> examSchedule) {
-        System.out.println("\nExam Schedule");
-        
-        List<String> enrolled = enrolledCourses.getOrDefault(studentId, new ArrayList<>());
-        if (enrolled.isEmpty()) {
-            System.out.println("You are not enrolled in any courses.");
-            return;
+// // Interface for providing exam schedules for given courses
+// public interface ExamScheduleProvider {
+//     List<ExamScheduleProvider> getExamSchedule(List<String> courseCodes);
+// }
+
+// // Interface for displaying exam schedules
+// public interface ExamView {
+//     void displayExamSchedule(List<ExamScheduleProvider> schedules);
+// }
+
+// The Exam class depends on abstractions to comply with OCP
+public class Exam {
+    private final EnrollmentService enrollmentService;
+    private final ExamScheduleProvider scheduleProvider;
+    private final ExamView examView;
+
+    public Exam(EnrollmentService enrollmentService, ExamScheduleProvider scheduleProvider, ExamView examView) {
+        if (enrollmentService == null || scheduleProvider == null || examView == null) {
+            throw new IllegalArgumentException("Dependencies cannot be null");
         }
-        
-        System.out.printf("%-10s %-15s %-15s\n", "Course", "Date", "Time");
-        for (String course : enrolled) {
-            // In a real system, this would come from a proper schedule
-            System.out.printf("%-10s %-15s %-15s\n", course, "2025-05-20", "09:00 AM");
+        this.enrollmentService = enrollmentService;
+        this.scheduleProvider = scheduleProvider;
+        this.examView = examView;
+    }
+
+    public void viewExams(String studentId) {
+        if (studentId == null || studentId.isBlank()) {
+            throw new IllegalArgumentException("Student ID cannot be null or empty");
         }
+        List<String> courses = enrollmentService.getEnrolledCourses(studentId);
+        // List<ExamScheduleProvider> schedules = scheduleProvider.getExamSchedule(courses);
+        // examView.displayExamSchedule(schedules);
     }
 }

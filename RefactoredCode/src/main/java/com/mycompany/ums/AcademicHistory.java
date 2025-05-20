@@ -1,25 +1,87 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.mycompany.ums;
 
-// Academic History class
+import java.util.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+// --- Strategy Interfaces (ISP, DIP) ---
+interface ValidationStrategy {
+    void validate(String studentId, Map<String, List<String>> academicHistory);
+}
 
-class AcademicHistory {
-    public static void viewHistory(String studentId, Map<String, List<String>> academicHistory) {
-        System.out.println("\nAcademic History");
-        
-        List<String> history = academicHistory.getOrDefault(studentId, new ArrayList<>());
-        if (history.isEmpty()) {
-            System.out.println("No academic history available.");
-            return;
+interface HistoryFetcherStrategy {
+    List<String> fetch(String studentId, Map<String, List<String>> academicHistory);
+}
+
+interface HistoryPrinterStrategy {
+    void print(List<String> history);
+}
+
+// --- Default Strategy Implementations (LSP compliant) ---
+class DefaultValidation implements ValidationStrategy {
+    @Override
+    public void validate(String studentId, Map<String, List<String>> academicHistory) {
+        if (studentId == null || studentId.isEmpty()) {
+            throw new IllegalArgumentException("Student ID cannot be null or empty.");
         }
-        
-        history.forEach(System.out::println);
+        if (!academicHistory.containsKey(studentId)) {
+            throw new IllegalArgumentException("No academic history found for student ID: " + studentId);
+        }
+    }
+}
+
+class DefaultFetcher implements HistoryFetcherStrategy {
+    @Override
+    public List<String> fetch(String studentId, Map<String, List<String>> academicHistory) {
+        return academicHistory.getOrDefault(studentId, new ArrayList<>());
+    }
+}
+
+class DefaultPrinter implements HistoryPrinterStrategy {
+    @Override
+    public void print(List<String> history) {
+        if (history.isEmpty()) {
+            System.out.println("No academic records found.");
+        } else {
+            System.out.println("Academic History:");
+            for (String record : history) {
+                System.out.println("- " + record);
+            }
+        }
+    }
+}
+
+// --- AcademicHistory class (Applies OCP, DIP) ---
+public final class AcademicHistory {
+    private final ValidationStrategy validator;
+    private final HistoryFetcherStrategy fetcher;
+    private final HistoryPrinterStrategy printer;
+
+    public AcademicHistory(ValidationStrategy validator,
+                           HistoryFetcherStrategy fetcher,
+                           HistoryPrinterStrategy printer) {
+        this.validator = validator;
+        this.fetcher = fetcher;
+        this.printer = printer;
+    }
+
+    public void viewHistory(String studentId, Map<String, List<String>> academicHistory) {
+        validator.validate(studentId, academicHistory);
+        List<String> history = fetcher.fetch(studentId, academicHistory);
+        printer.print(history);
+    }
+
+    // --- Example usage ---
+    public static void main(String[] args) {
+        Map<String, List<String>> academicHistoryMap = new HashMap<>();
+        academicHistoryMap.put("S123", Arrays.asList("Math - A", "Science - B+"));
+        academicHistoryMap.put("S456", Arrays.asList("English - B", "Physics - A"));
+
+        // Injecting strategies (DIP)
+        AcademicHistory historyViewer = new AcademicHistory(
+            new DefaultValidation(),
+            new DefaultFetcher(),
+            new DefaultPrinter()
+        );
+
+        historyViewer.viewHistory("S123", academicHistoryMap);
     }
 }
